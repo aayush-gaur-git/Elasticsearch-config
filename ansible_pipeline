@@ -1,7 +1,7 @@
 pipeline {
      agent any
      environment {
-        REPO_URL = "https://github.com/Bhavin0099/new_assignment.git"
+        REPO_URL = "https://github.com/aayush-gaur-git/Elasticsearch-config.git"
          INSTALL_WORKSPACE = "/var/lib/jenkins/${JOB_NAME}"
      }
      stages {
