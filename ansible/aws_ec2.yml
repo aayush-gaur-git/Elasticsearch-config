@@ -1,0 +1,14 @@
+---
+plugin: aws_ec2
+regions:
+  - ap-southeast-1
+# filters:
+#   instance-state-code: 16
+filters:
+   tag:Name: Elasticsearch_private_slave
+
+#groups:
+ # ubuntu: "'elasticsearch' in tags.tool"
+#keyed_groups:
+ # - key: tags
+  #  prefix: tag

@@ -1,0 +1,9 @@
+---
+# vars file for elastic-tool
+tools:
+  - elasticsearch
+
+language:
+  - openjdk-8-jdk
+
+elasticsearch_host: 3.121.39.176
