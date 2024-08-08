@@ -7,9 +7,8 @@ terraform {
   } 
   
   backend "s3" {
-    bucket         	   = "terraform-tfstat-bucket2439"
+    bucket         	   = "elasticsearch-aayush"
     key              	   = "state/terraform.tfstate"
-    region         	   = "ap-southeast-1"
-    dynamodb_table = "terraform_lock"
+    region         	   = "us-east-1"
   }
 }
