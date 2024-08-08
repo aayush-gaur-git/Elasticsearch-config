@@ -1,112 +1,241 @@
-################ module for VPC #################
-
-module "for_vpc" {
-  source = "./modules/vpc"
-  vpc_tag = var.root_vpc_tag
-  my_vpc = var.root_vpc
+# Create VPC
+resource "aws_vpc" "elastic_vpc" {
+  cidr_block = var.vpc_cidr_block
+  tags = {
+    Name = "elastic-vpc"
+  }
 }
 
-################ module for public/private subnet#################
-
-
-module "for_public_subnet" {
-    source = "./modules/subnet"
-    vpc_id_from_subnet = module.for_vpc.vpc_output
-    public_subnet_cidr = var.root_public_subnet_cidr
-    public_subnet_tag = var.root_public_subnet_tag 
-    
+# Create 2 public subnets
+resource "aws_subnet" "elastic_pub_subnet_1" {
+  vpc_id            = aws_vpc.elastic_vpc.id
+  cidr_block        = var.public_subnet_1_cidr_block
+  availability_zone = var.availability_zone_1
+  tags = {
+    Name = "elasticpubsub1"
+  }
 }
 
-module "for_private_subnet" {
-    source = "./modules/subnet"
-    vpc_id_from_subnet = module.for_vpc.vpc_output
-    private_subnet_cidr = var.root_private_subnet_cidr 
-    private_subnet_tag = var.root_private_subnet_tag 
-    
+resource "aws_subnet" "elastic_pub_subnet_2" {
+  vpc_id            = aws_vpc.elastic_vpc.id
+  cidr_block        = var.public_subnet_2_cidr_block
+  availability_zone = var.availability_zone_2
+  tags = {
+    Name = "elasticpubsub2"
+  }
 }
 
-################ module for Internet gateway #################
-
-module "for_IGW" {
-    source = "./modules/IGW"
-    vpc_id_from_IGW = module.for_vpc.vpc_output
-    internet_gateway_tag = var.root_internet_gateway_tag
+# Create 2 private subnets
+resource "aws_subnet" "elastic_priv_subnet_1" {
+  vpc_id            = aws_vpc.elastic_vpc.id
+  cidr_block        = var.private_subnet_1_cidr_block
+  availability_zone = var.availability_zone_1
+  tags = {
+    Name = "elasticprisub1"
+  }
 }
 
-################ module for NAT gateway #################
+resource "aws_subnet" "elastic_priv_subnet_2" {
+  vpc_id            = aws_vpc.elastic_vpc.id
+  cidr_block        = var.private_subnet_2_cidr_block
+  availability_zone = var.availability_zone_2
+  tags = {
+    Name = "elasticprisub2"
+  }
+}
 
-module "for_NAT_gateway" {
-    source = "./modules/NAT"
-    public_subnet_id_at_NAT_gateway = module.for_public_subnet.public_subnet_output
-    NAT_gateway_tag = var.root_NAT_gateway_tag
+# Create Internet Gateway
+resource "aws_internet_gateway" "igw" {
+  vpc_id = aws_vpc.elastic_vpc.id
+  tags = {
+    Name = "igw"
+  }
+}
+
+# Create Elastic IP for NAT Gateway
+resource "aws_eip" "gateway" {
+  domain = "vpc"
+  tags = {
+    Name = "gateway-eip"
+  }
+}
+
+# Create NAT Gateway
+resource "aws_nat_gateway" "gateway" {
+  allocation_id = aws_eip.gateway.id
+  subnet_id     = aws_subnet.elastic_pub_subnet_1.id
+  tags = {
+    Name = "gateway"
+  }
+}
+
+# Create Public Route Table
+resource "aws_route_table" "public_route_table" {
+  vpc_id = aws_vpc.elastic_vpc.id
+
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.igw.id
+  }
+
+  tags = {
+    Name = "public_route_table"
+  }
+}
+
+# Associate Public Route Table with Public Subnets
+resource "aws_route_table_association" "public_subnet_1" {
+  subnet_id      = aws_subnet.elastic_pub_subnet_1.id
+  route_table_id = aws_route_table.public_route_table.id
+}
+
+resource "aws_route_table_association" "public_subnet_2" {
+  subnet_id      = aws_subnet.elastic_pub_subnet_2.id
+  route_table_id = aws_route_table.public_route_table.id
+}
+
+# Create Private Route Table
+resource "aws_route_table" "private_route_table" {
+  vpc_id = aws_vpc.elastic_vpc.id
+
+  route {
+    cidr_block     = "0.0.0.0/0"
+    nat_gateway_id = aws_nat_gateway.gateway.id
+  }
+
+  tags = {
+    Name = "private_route_table"
+  }
+}
+
+# Associate Private Route Table with Private Subnets
+resource "aws_route_table_association" "private_subnet_1" {
+  subnet_id      = aws_subnet.elastic_priv_subnet_1.id
+  route_table_id = aws_route_table.private_route_table.id
+}
+
+resource "aws_route_table_association" "private_subnet_2" {
+  subnet_id      = aws_subnet.elastic_priv_subnet_2.id
+  route_table_id = aws_route_table.private_route_table.id
+}
+
+# Security Group for Public Instances (Bastion Host)
+resource "aws_security_group" "bastion_sg" {
+  name        = "bastion_sg"
+  description = "Security group for bastion instances"
+  vpc_id      = aws_vpc.elastic_vpc.id
+
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+# Security Group for Private Instances (Elastic)
+resource "aws_security_group" "elastic_sg" {
+  name        = "elastic_sg"
+  description = "Security group for elastic instances"
+  vpc_id      = aws_vpc.elastic_vpc.id
+
+  ingress {
+    from_port        = 22
+    to_port          = 22
+    protocol         = "tcp"
+    security_groups  = [aws_security_group.bastion_sg.id]
+  }
+
+  ingress {
+    from_port        = 8200
+    to_port          = 8200
+    protocol         = "tcp"
+    security_groups  = [aws_security_group.bastion_sg.id]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+# Optional Internal Communication Security Group
+resource "aws_security_group" "internal_sg" {
+  name        = "internal_sg"
+  description = "Security group for internal communication"
+  vpc_id      = aws_vpc.elastic_vpc.id
+
+  ingress {
+    from_port        = 3306
+    to_port          = 3306
+    protocol         = "tcp"
+    security_groups  = [aws_security_group.elastic_sg.id]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+# Create public instances with t2.micro and tags
+resource "aws_instance" "public_instance_1" {
+  ami                    = "ami-04a81a99f5ec58529"
+  instance_type          = "t2.micro"
+  subnet_id              = aws_subnet.elastic_pub_subnet_1.id
+  key_name               = "elastic-demo-key"  # Update this line to use the existing key pair
+  vpc_security_group_ids = [aws_security_group.bastion_sg.id]
+
+  tags = {
+    Name = "Bastion1"
+  }
+}
+
+resource "aws_instance" "public_instance_2" {
+  ami                    = "ami-04a81a99f5ec58529"
+  instance_type          = "t2.micro"
+  subnet_id              = aws_subnet.elastic_pub_subnet_2.id
+  key_name               = "elastic-demo-key"  # Update this line to use the existing key pair
+  associate_public_ip_address = true
+  vpc_security_group_ids = [aws_security_group.bastion_sg.id]
+
+  tags = {
+    Name = "Bastion2"
+  }
 }
 
 
-#=========== public/private route table =============
+# Create private instances with t2.micro and tags
+resource "aws_instance" "private_instance_1" {
+  ami                    = "ami-04a81a99f5ec58529"
+  instance_type          = "t2.micro"
+  subnet_id              = aws_subnet.elastic_priv_subnet_1.id
+  vpc_security_group_ids = [aws_security_group.elastic_sg.id]
 
-
-
-module "for_route" {
-    source = "./modules/route_table"
-
-    vpc_id_from_RT = module.for_vpc.vpc_output
-    public_route_cidr_block = var.root_public_route_cidr_block
-    public_route_IGW = module.for_IGW.IGW_output
-    public_route_tag = var.root_public_route_tag
-
-    route_public_subnet = module.for_public_subnet.public_subnet_output
-
-
-
-    private_route_cidr_block = var.root_private_route_cidr_block
-    private_route_NAT_gateway = module.for_NAT_gateway.NAT_gateway_output
-    private_route_tag = var.root_private_route_tag
-
-    route_private_subnet = module.for_private_subnet.private_subnet_output
+  tags = {
+    Name = "Elastic1"
+  }
 }
 
+resource "aws_instance" "private_instance_2" {
+  ami                    = "ami-04a81a99f5ec58529"
+  instance_type          = "t2.micro"
+  subnet_id              = aws_subnet.elastic_priv_subnet_2.id
+  vpc_security_group_ids = [aws_security_group.elastic_sg.id]
 
-#################### Security group ###########
-
-module "for_SG" {
-    source = "./modules/security_group"
-    SG_name = var.root_SG_name
-    SG_description = var.root_SG_description
-    vpc_id_from_SG = module.for_vpc.vpc_output
-    SG_tag = var.root_SG_tag
+  tags = {
+    Name = "Elastic2"
+  }
 }
-
-#################### key pair ###########
-
-module "for_key_pair" {
-  source = "./modules/key"
-  public_key_pair = var.root_public_key
-  private_key_pair = var.root_private_key
-}
-
-#################### private/public instances ###########
-
-module "for_instances" {
-  source = "./modules/instances"
-
-  private_instance_count_number =  var.root_private_instance_count_number
-  instance_ami = var.root_instance_ami
-  private_instance_type = var.root_private_instance_type
-  private_instance_name = var.root_private_instance_name
-  instance_private_subnet = module.for_private_subnet.private_subnet_output
-  private_instance_volume_size = var.root_private_instance_volume_size
-  private_instance_volume_type = var.root_private_instance_volume_type
-  SG_from_instances = module.for_SG.security_group_output
-
-    key_pair_from_instance = module.for_key_pair.public_key_file_output
-
-  public_instance_count_number = var.root_public_instance_count_number
-  public_instance_type = var.root_public_instance_type
-  public_instance_name = var.root_public_instance_name
-  instance_public_subnet = module.for_public_subnet.public_subnet_output
-  public_instance_volume_size = var.root_public_instance_volume_size
-  public_instance_volume_type = var.root_public_instance_volume_type
-}
-
-
 
