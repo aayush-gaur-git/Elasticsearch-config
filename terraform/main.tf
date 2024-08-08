@@ -54,7 +54,6 @@ resource "aws_internet_gateway" "igw" {
 
 # Create Elastic IP for NAT Gateway
 resource "aws_eip" "gateway" {
-  domain = "vpc"
   tags = {
     Name = "gateway-eip"
   }
