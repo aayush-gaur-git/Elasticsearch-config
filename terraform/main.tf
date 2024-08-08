@@ -195,9 +195,10 @@ resource "aws_instance" "public_instance_1" {
   subnet_id              = aws_subnet.elastic_pub_subnet_1.id
   key_name               = "elastic-demo-key"  # Update this line to use the existing key pair
   vpc_security_group_ids = [aws_security_group.bastion_sg.id]
+  associate_public_ip_address = true  
 
   tags = {
-    Name = "Bastion1"
+    Name = "Elastic1"
   }
 }
 
@@ -210,7 +211,7 @@ resource "aws_instance" "public_instance_2" {
   vpc_security_group_ids = [aws_security_group.bastion_sg.id]
 
   tags = {
-    Name = "Bastion2"
+    Name = "Elastic2"
   }
 }
 
@@ -223,7 +224,7 @@ resource "aws_instance" "private_instance_1" {
   vpc_security_group_ids = [aws_security_group.elastic_sg.id]
 
   tags = {
-    Name = "Elastic1"
+    Name = "Private1"
   }
 }
 
@@ -234,7 +235,7 @@ resource "aws_instance" "private_instance_2" {
   vpc_security_group_ids = [aws_security_group.elastic_sg.id]
 
   tags = {
-    Name = "Elastic2"
+    Name = "Private2"
   }
 }
 
