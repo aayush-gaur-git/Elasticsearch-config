@@ -1,7 +1,5 @@
 ---
-- name: here my role for elastic
-  hosts: aws_ec2
-  become: true
-  #ignore_errors: true
+- hosts: aws_ec2
+  become: yes
   roles:
-    - elastic-tool
+    - elastic-role
