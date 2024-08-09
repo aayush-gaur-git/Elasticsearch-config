@@ -5,6 +5,7 @@ regions:
 # filters:
 #   instance-state-code: 16
 filters:
+  #  tag:Name: Bastion1
    tag:Name: Elasticsearch1
 
 compose:
@@ -15,6 +16,5 @@ compose:
 #keyed_groups:
  # - key: tags
   #  prefix: tag
-aws_access_key_id = AKIA47CRZDESBC26OASM
-aws_secret_access_key = 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
-
+aws_access_key: AKIA47CRZDESBC26OASM
+aws_secret_key: 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
