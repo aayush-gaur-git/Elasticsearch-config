@@ -1,6 +1,6 @@
 ---
 - name: here my role for elastic
-  hosts: software
+  hosts: all
   become: true
   roles:
     - elastic-tool 
