@@ -1,6 +1,6 @@
 ---
 - name: here my role for elastic
-  hosts: aws_ec2.yml
+  hosts: all
   become: true
   #ignore_errors: true
   roles:
