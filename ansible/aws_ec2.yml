@@ -5,7 +5,7 @@ regions:
 # filters:
 #   instance-state-code: 16
 filters:
-   tag:Name: Elasticsearch_private_slave
+   tag:Name: Elasticsearch1
 
 #groups:
  # ubuntu: "'elasticsearch' in tags.tool"
