@@ -188,17 +188,17 @@ resource "aws_security_group" "internal_sg" {
   }
 }
 
-# Create public instances with t2.micro and tags
+# Create public instances with t2.medium and tags
 resource "aws_instance" "public_instance_1" {
   ami                    = "ami-04a81a99f5ec58529"
-  instance_type          = "t2.micro"
+  instance_type          = "t2.medium"
   subnet_id              = aws_subnet.elastic_pub_subnet_1.id
   key_name               = "elastic-demo-key"  # Update this line to use the existing key pair
   vpc_security_group_ids = [aws_security_group.bastion_sg.id]
   associate_public_ip_address = true  
 
   tags = {
-    Name = "Elastic1"
+    Name = "Elasticsearch_private_slave"
   }
 }
 
