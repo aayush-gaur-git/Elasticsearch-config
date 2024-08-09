@@ -5,7 +5,7 @@ regions:
 # filters:
 #   instance-state-code: 16
 filters:
-  #  tag:Name: Bastion1
+  
    tag:Name: Elasticsearch1
 
 compose:
