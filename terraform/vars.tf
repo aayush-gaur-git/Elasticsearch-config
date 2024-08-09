@@ -48,7 +48,7 @@ variable "availability_zone_2" {
 
 variable "instance_type_public" {
   type        = string
-  default     = "t2.micro"
+  default     = "t2.medium"
   description = "Instance Type for Public Subnet"
 }
 
