@@ -13,7 +13,7 @@ pipeline {
          stage('Install dependency') {
              steps {
                  dir('ansible') {
-                 sh "ansible-playbook test.yml"
+                 sh "ansible-playbook -i aws_ec2.yml"
                  }
              }
          }
