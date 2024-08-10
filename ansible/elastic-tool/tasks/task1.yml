@@ -1,87 +1,32 @@
-# tasks file for elasticsearch
-- name: Install Java on Ubuntu
-  apt:
-    name: "{{ java_package_ubuntu }}"
-    state: present
-    update_cache: yes
-  when: ansible_distribution == 'Ubuntu'
-  become: true
+---
+  - name: adding elasticsearch GPG key
+    apt_key:
+        url: https://artifacts.elastic.co/GPG-KEY-elasticsearch
+        state: present
+        validate_certs: yes
+        keyring: /usr/share/keyrings/elasticsearch-keyring.gpg
+         
+  - name: now installing transport-https
+    apt:
+        name: apt-transport-https
+        state: present
+        
+  - name: adding elasticsearch repository
+    apt_repository:
+        repo: 'deb [signed-by=/usr/share/keyrings/elasticsearch-keyring.gpg] https://artifacts.elastic.co/packages/8.x/apt stable main'
+        #repo:  deb https://artifacts.elastic.co/packages/7.x/apt stable main
+        state: present
 
-- name: Install Java on RedHat/CentOS
-  yum:
-    name: java-1.8.0-openjdk
-    state: present
-  when: ansible_os_family == 'RedHat' or ansible_distribution == 'CentOS'
-  become: true
+  - name: installing language
+    apt:
+       # update_cache: yes
+        name: "{{ language }}"
+        state: present
 
-- name: Add Elasticsearch GPG key for Debian/Ubuntu
-  apt_key:
-    url: "https://packages.elastic.co/GPG-KEY-elasticsearch"
-    state: present
-  when: ansible_os_family == 'Debian'
-  become: true
-
-- name: Install prerequisites for Debian/Ubuntu
-  apt:
-    name: "apt-transport-https"
-    state: present
-  when: ansible_os_family == 'Debian'
-  become: true
-
-- name: Add Elasticsearch repository for Debian/Ubuntu
-  apt_repository:
-    repo: "deb https://artifacts.elastic.co/packages/{{ elasticsearch_version }}/apt stable main"
-    state: present
-  when: ansible_os_family == 'Debian' or ansible_distribution == 'Ubuntu'
-  become: true
-
-- name: Add Elasticsearch repository for CentOS/RedHat
-  yum_repository:
-    name: elasticsearch
-    description: Elasticsearch repository for CentOS
-    baseurl: "https://artifacts.elastic.co/packages/{{ elasticsearch_version }}/yum"
-    gpgkey: "https://artifacts.elastic.co/GPG-KEY-elasticsearch"
-    enabled: yes
-    state: present
-  when: ansible_os_family == 'RedHat' or ansible_distribution == 'CentOS'
-  become: true
-
-- name: Install Elasticsearch for Debian/Ubuntu
-  apt:
-    name: elasticsearch
-    state: present
-    update_cache: yes
-  when: ansible_os_family == 'Debian' or ansible_distribution == 'Ubuntu'
-  become: true
-
-- name: Install Elasticsearch for RedHat/CentOS
-  yum:
-    name: elasticsearch
-    state: present
-  when: ansible_os_family == 'RedHat' or ansible_distribution == 'CentOS'
-  become: true
-
-- name: Enable and start Elasticsearch service
-  service:
-    name: elasticsearch
-    enabled: yes
-    state: started
-  become: true
-
-- name: Configure Elasticsearch
-  template:
-    src: elasticsearch.yml.j2
-    dest: /etc/elasticsearch/elasticsearch.yml
-  notify: Restart Elasticsearch
-  become: true
-
-- name: Verify Elasticsearch installation
-  command: curl -X GET "localhost:9200/"
-  register: es_check
-  failed_when: "'You Know, for Search' not in es_check.stdout"
-
-handlers:
-  - name: Restart Elasticsearch
-    service:
-      name: elasticsearch
-      state: restarted
+      
+  - name: installing tool
+    apt:
+        #update_cache: yes
+        name: "{{ tools }}"
+        state: present
+    notify: start my service
