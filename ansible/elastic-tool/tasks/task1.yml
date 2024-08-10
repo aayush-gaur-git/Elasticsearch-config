@@ -1,10 +1,17 @@
 ---
-  - name: adding elasticsearch GPG key
-    apt_key:
-        url: https://artifacts.elastic.co/GPG-KEY-elasticsearch
-        state: present
-        validate_certs: yes
-        keyring: /usr/share/keyrings/elasticsearch-keyring.gpg
+- name: Add Elasticsearch GPG key
+  apt_key:
+    url: https://artifacts.elastic.co/GPG-KEY-elasticsearch
+    keyring: /usr/share/keyrings/elasticsearch-keyring.gpg
+    state: present
+    validate_certs: yes
+
+ # - name: adding elasticsearch GPG key
+  #  apt_key:
+   #     url: https://artifacts.elastic.co/GPG-KEY-elasticsearch
+    #    state: present
+     #   validate_certs: yes
+      #  keyring: /usr/share/keyrings/elasticsearch-keyring.gpg
          
   - name: now installing transport-https
     apt:
