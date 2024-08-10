@@ -6,6 +6,49 @@
     state: present
     validate_certs: yes
 
+- name: Install apt-transport-https
+  apt:
+    name: apt-transport-https
+    state: present
+
+- name: Add Elasticsearch APT repository
+  apt_repository:
+    repo: "deb [signed-by=/usr/share/keyrings/elasticsearch-keyring.gpg] https://artifacts.elastic.co/packages/{{ elasticsearch_version }}/apt stable main"
+    filename: elastic-8.x
+    state: present
+
+- name: Update APT cache
+  apt:
+    update_cache: yes
+
+- name: Install Elasticsearch
+  apt:
+    name: elasticsearch
+    state: present
+
+- name: Reload systemd
+  systemd:
+    daemon_reload: yes
+
+- name: Enable Elasticsearch service
+  systemd:
+    name: elasticsearch
+    enabled: yes
+
+- name: Start Elasticsearch service
+  systemd:
+    name: elasticsearch
+    state: started
+
+- name: Check Elasticsearch service status
+  command: systemctl status elasticsearch
+  register: elasticsearch_status
+  ignore_errors: yes
+
+- name: Print Elasticsearch service status
+  debug:
+    msg: "{{ elasticsearch_status.stdout }}"
+
  # - name: adding elasticsearch GPG key
   #  apt_key:
    #     url: https://artifacts.elastic.co/GPG-KEY-elasticsearch
@@ -13,27 +56,27 @@
      #   validate_certs: yes
       #  keyring: /usr/share/keyrings/elasticsearch-keyring.gpg
          
-  - name: now installing transport-https
-    apt:
-        name: apt-transport-https
-        state: present
+  #- name: now installing transport-https
+   # apt:
+#        name: apt-transport-https
+ #       state: present
         
-  - name: adding elasticsearch repository
-    apt_repository:
-        repo: 'deb [signed-by=/usr/share/keyrings/elasticsearch-keyring.gpg] https://artifacts.elastic.co/packages/8.x/apt stable main'
+ # - name: adding elasticsearch repository
+  #  apt_repository:
+    #    repo: 'deb [signed-by=/usr/share/keyrings/elasticsearch-keyring.gpg] https://artifacts.elastic.co/packages/8.x/apt stable main'
         #repo:  deb https://artifacts.elastic.co/packages/7.x/apt stable main
-        state: present
+    #    state: present
 
-  - name: installing language
-    apt:
+  #- name: installing language
+  #  apt:
        # update_cache: yes
-        name: "{{ language }}"
-        state: present
+   #     name: "{{ language }}"
+     #   state: present
 
       
-  - name: installing tool
-    apt:
+#  - name: installing tool
+ #   apt:
         #update_cache: yes
-        name: "{{ tools }}"
-        state: present
-    notify: start my service
+ #       name: "{{ tools }}"
+ #       state: present
+  #  notify: start my service
