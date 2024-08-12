@@ -1,5 +1,5 @@
 ---
-- name: here my role for elastic
+- name: role for elastic
   hosts: all
   become: true
   roles:
