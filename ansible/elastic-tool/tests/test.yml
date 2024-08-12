@@ -1,6 +1,6 @@
 ---
 - name: role for elastic
-  hosts: all
+  hosts: aws_ec2.yml
   become: true
   roles:
     - elastic-tool 
